@@ -1,0 +1,51 @@
+// Botón de notificaciones
+Positioned(
+  bottom: 20,
+  right: 20,
+  child: FloatingActionButton(
+    onPressed: () {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Medicaciones:',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                if (medications.isEmpty)
+                  const Text('No hay medicaciones agregadas.')
+                else
+                  Expanded(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: medications.length,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          title: Text(medications[index]['medicationName']),
+                          subtitle: Text('Dosis: ${medications[index]['dosage']}, Horario: ${medications[index]['schedule']}, Días: ${medications[index]['days']}, Duración: ${medications[index]['duration']}'),
+                          onTap: () {
+                            setState(() {
+                              selectedMedication = medications[index]; // Establecer la medicación seleccionada
+                              isMedicationVisible = true; // Mostrar el contenedor de medicación al seleccionar una medicación
+                            });
+                            Navigator.pop(context); // Cerrar el modal de medicaciones
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+    child: const Icon(Icons.notifications),
+  ),
+),
