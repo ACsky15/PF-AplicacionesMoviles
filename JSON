@@ -1,0 +1,24 @@
+// Parte del JSON
+Future<void> _loadMedications() async {
+  final prefs = await SharedPreferences.getInstance();
+  final medicationsData = prefs.getString('medications');
+  if (medicationsData != null) {
+    setState(() {
+      medications = json.decode(medicationsData) as List<Map<String, dynamic>>;
+    });
+  }
+}
+
+void _saveMedications() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('medications', json.encode(medications));
+}
+
+void addMedication(Map<String, dynamic> medicationDetails) {
+  setState(() {
+    medications.add(medicationDetails);
+    _saveMedications(); // Guardar medicación al añadir
+  });
+}
+
+
