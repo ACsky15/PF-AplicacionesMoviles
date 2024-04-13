@@ -96,7 +96,7 @@ class _MediReminderHomePageState extends State<MediReminderHomePage> {
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.watch, size: 40), // Icono de reloj
+                            const Icon(Icons.access_time_filled, size: 40), // Icono de reloj
                             const SizedBox(height: 10),
                             Text(
                               DateFormat('hh:mm a').format(DateTime.now()), // Formato de hora AM/PM
