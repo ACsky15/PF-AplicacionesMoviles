@@ -1,125 +1,357 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart'; // Para formateo de fechas
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MediReminderApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MediReminderApp extends StatelessWidget {
+  const MediReminderApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'MediReminder',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.blue).copyWith(
+          background: const Color.fromRGBO(164, 202, 232, 1),
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MediReminderHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class MediReminderHomePage extends StatefulWidget {
+  const MediReminderHomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MediReminderHomePageState createState() => _MediReminderHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MediReminderHomePageState extends State<MediReminderHomePage> {
+  List<Map<String, dynamic>> medications = [];
+  bool isMedicationVisible = false; // Variable para controlar la visibilidad del contenedor de medicación
+  Map<String, dynamic>? selectedMedication; // Variable para almacenar los detalles de la medicación seleccionada
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    _loadMedications();
+  }
+
+  Future<void> _loadMedications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final medicationsData = prefs.getString('medications');
+    if (medicationsData != null) {
+      setState(() {
+        medications = json.decode(medicationsData) as List<Map<String, dynamic>>;
+      });
+    }
+  }
+
+  void _saveMedications() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('medications', json.encode(medications));
+  }
+
+  void addMedication(Map<String, dynamic> medicationDetails) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      medications.add(medicationDetails);
+      _saveMedications(); // Guardar medicación al añadir
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('MediReminder'),
+        leading: Image.asset(
+          'assets/Logo.ico',
+          width: 40,
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.35),
+                Container(
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.7), // Contenedor blanco con transparencia
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.watch, size: 40), // Icono de reloj
+                            const SizedBox(height: 10),
+                            Text(
+                              DateFormat('hh:mm a').format(DateTime.now()), // Formato de hora AM/PM
+                              style: const TextStyle(fontSize: 36),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              DateFormat('HH:mm').format(DateTime.now()), // Hora digital (formato militar)
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Botón para agregar medicación
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AddMedicationScreen(addMedication)),
+                    );
+                  },
+                  child: const Text('Agregar Medicación'),
+                ),
+                const SizedBox(height: 20),
+                // Widget del Calendario
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8), // Color blanco con transparencia
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const CalendarWidget(),
+                ),
+                const SizedBox(height: 20),
+                if (isMedicationVisible && selectedMedication != null) // Mostrar el contenedor de medicación si es visible y hay una medicación seleccionada
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7), // Color blanco con transparencia
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Medicación Seleccionada:',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 20),
+                        Text('Nombre: ${selectedMedication!['medicationName']}'),
+                        Text('Dosis: ${selectedMedication!['dosage']}'),
+                        Text('Horario: ${selectedMedication!['schedule']}'),
+                        Text('Días: ${selectedMedication!['days']}'),
+                        Text('Duración: ${selectedMedication!['duration']}'),
+                      ],
+                    ),
+                  ),
+              ],
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Medicaciones:',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 20),
+                          if (medications.isEmpty)
+                            const Text('No hay medicaciones agregadas.')
+                          else
+                            Expanded(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: medications.length,
+                                itemBuilder: (context, index) {
+                                  return ListTile(
+                                    title: Text(medications[index]['medicationName']),
+                                    subtitle: Text('Dosis: ${medications[index]['dosage']}, Horario: ${medications[index]['schedule']}, Días: ${medications[index]['days']}, Duración: ${medications[index]['duration']}'),
+                                    onTap: () {
+                                      setState(() {
+                                        selectedMedication = medications[index]; // Establecer la medicación seleccionada
+                                        isMedicationVisible = true; // Mostrar el contenedor de medicación al seleccionar una medicación
+                                      });
+                                      Navigator.pop(context); // Cerrar el modal de medicaciones
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+              child: const Icon(Icons.notifications),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CalendarWidget extends StatefulWidget {
+  const CalendarWidget({super.key});
+
+  @override
+  _CalendarWidgetState createState() => _CalendarWidgetState();
+}
+
+class _CalendarWidgetState extends State<CalendarWidget> {
+  late CalendarFormat _calendarFormat;
+  late DateTime _focusedDay;
+  late DateTime _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _calendarFormat = CalendarFormat.month;
+    _focusedDay = DateTime.now();
+    _selectedDay = DateTime.now();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TableCalendar(
+      calendarFormat: _calendarFormat,
+      focusedDay: _focusedDay,
+      firstDay: DateTime.utc(2020, 1, 1),
+      lastDay: DateTime.utc(2030, 12, 31),
+      selectedDayPredicate: (day) {
+        return isSameDay(_selectedDay, day);
+      },
+      onFormatChanged: (format) {
+        setState(() {
+          _calendarFormat = format;
+        });
+      },
+      onDaySelected: (selectedDay, focusedDay) {
+        setState(() {
+          _selectedDay = selectedDay;
+          _focusedDay = focusedDay;
+        });
+      },
+    );
+  }
+}
+
+class AddMedicationScreen extends StatefulWidget {
+  final Function(Map<String, dynamic>) onSave;
+
+  const AddMedicationScreen(this.onSave, {super.key});
+
+  @override
+  _AddMedicationScreenState createState() => _AddMedicationScreenState();
+}
+
+class _AddMedicationScreenState extends State<AddMedicationScreen> {
+  String medicationName = '';
+  String dosage = '';
+  String schedule = '';
+  String days = '';
+  String duration = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Agregar Medicación'),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Nombre de la Medicación'),
+              onChanged: (value) {
+                setState(() {
+                  medicationName = value;
+                });
+              },
+            ),
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Dosis'),
+              onChanged: (value) {
+                setState(() {
+                  dosage = value;
+                });
+              },
+            ),
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Horario'),
+              onChanged: (value) {
+                setState(() {
+                  schedule = value;
+                });
+              },
+            ),
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Días'),
+              onChanged: (value) {
+                setState(() {
+                  days = value;
+                });
+              },
+            ),
+            TextFormField(
+              decoration: const InputDecoration(labelText: 'Duración'),
+              onChanged: (value) {
+                setState(() {
+                  duration = value;
+                });
+              },
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Map<String, dynamic> medicationDetails = {
+                  'medicationName': medicationName,
+                  'dosage': dosage,
+                  'schedule': schedule,
+                  'days': days,
+                  'duration': duration,
+                };
+
+                widget.onSave(medicationDetails);
+
+                Navigator.pop(context);
+              },
+              child: const Text('Guardar'),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

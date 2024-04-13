@@ -30,6 +30,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  table_calendar: ^3.0.0
+  shared_preferences:
+  intl: ^0.17.0
+
+
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -52,6 +57,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+  - assets/Logo.ico
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
